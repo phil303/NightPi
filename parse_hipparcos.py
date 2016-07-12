@@ -6,6 +6,7 @@ HIPPARCOS_DELIM = '|'
 VISIBLE_STAR_MAG = 7.0
 VISIBLE_STAR_PATH = 'data/hipparcos_visible.csv'
 FIELDS = OrderedDict([
+    ['hip_id', 1],
     ['vmag', 5],
     ['spec_type', 76],
     ['dec_deg', 9],
@@ -17,8 +18,8 @@ FIELDS = OrderedDict([
 def visible_stars():
     visible = []
     with open(HIPPARCOS_PATH) as f:
-        while f.readline():
-            data = [val.strip() for val in f.readline().split(HIPPARCOS_DELIM)]
+        for line in f:
+            data = [val.strip() for val in line.split(HIPPARCOS_DELIM)]
 
             try:
                 vmag = float(data[5])
