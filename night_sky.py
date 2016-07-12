@@ -64,6 +64,16 @@ def _in_dec_range(dec, _range):
         return -90 < dec < _range[1] or _range[0] < dec < -90
 
 def current_night_sky(lat, lng):
+    """ Find all visible stars in the sky above.
+
+    Given any latitude and longitude and assuming we only want stars at the
+    current moment for that location, this will find all visible stars (visual
+    magnitude 7.0 and below) in the night sky.
+
+    :param lat: float between -90 and 90
+    :param lng: float between 0 and 360 going east
+        In other words, -122.42 degs west would become 237.58 (360 - 122.42)
+    """
     lmst = local_sidereal_time(lng)
 
     range_ra = [lmst - 90, lmst + 90]
