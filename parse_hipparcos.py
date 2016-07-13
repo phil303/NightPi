@@ -3,8 +3,11 @@ from collections import OrderedDict
 
 HIPPARCOS_PATH = 'data/hipparcos.dat'
 HIPPARCOS_DELIM = '|'
-VISIBLE_STAR_MAG = 7.0
 VISIBLE_STAR_PATH = 'data/hipparcos_visible.csv'
+
+# stellar magnitude threshold according to Bright Star Catalogue:
+# https://en.wikipedia.org/wiki/Bright_Star_Catalogue
+VISIBLE_STAR_MAG = 6.5
 FIELDS = OrderedDict([
     ['hip_id', 1],
     ['vmag', 5],
