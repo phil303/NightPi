@@ -114,3 +114,10 @@ def stars_in_viewport(location, fov_azimuth, az_range, fov_altitude, alt_range):
                 visible.append(star)
 
     return visible
+
+def star_data(hip_id, location):
+    lat, lng = location
+    lst = local_sidereal_time(lng)
+    for s, ra, dec in fetch_stars():
+        if s['hip_id'] == hip_id:
+            return (s, get_horizontal_coords((ra, dec), (lst, lat)))
