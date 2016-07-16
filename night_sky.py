@@ -103,9 +103,14 @@ def stars_in_viewport(location, fov_azimuth, az_range, fov_altitude, alt_range):
     for star, ra, dec in fetch_stars():
         star_altitude, star_azimuth = get_horizontal_coords((ra, dec), (lst, lat))
 
-        if (abs(fov_altitude - star_altitude) < alt_range and
-            abs(fov_azimuth - star_azimuth) < az_range and
-            star_altitude > 0):
-            visible.append(star)
+        if abs(fov_altitude - star_altitude) < alt_range and star_altitude > 0:
+            # we need to handle both the general case and the "exceeding 90
+            # degrees altitude" case, where we need to check the azimuths on
+            # the other side of the circle since those become valid
+            if (abs(fov_azimuth - star_azimuth) < az_range or
+                (fov_altitude + star_altitude > 90 and
+                 abs((fov_azimuth + 180) % 360 - star_azimuth) < az_range)
+               ):
+                visible.append(star)
 
     return visible
