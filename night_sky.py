@@ -1,5 +1,5 @@
 import csv
-from math import pi, radians, asin, acos, sin, cos
+from math import pi, radians, degrees, asin, acos, sin, cos
 from datetime import datetime
 
 from parse_hipparcos import VISIBLE_STAR_PATH
@@ -42,35 +42,67 @@ def get_horizontal_coords(star_coords, observer_coords):
     azimuth = acos(
        (sin(dec) - sin(altitude) * sin(lat)) / (cos(altitude) * cos(lat))
     )
-    return altitude, azimuth
+    return degrees(altitude), degrees(azimuth)
 
 
-def current_night_sky(lat, lng):
-    """ Find all visible stars in the sky above.
-
-    Given any latitude and longitude and assuming we only want stars at the
-    current moment for that location, this will find all visible stars (visual
-    magnitude 6.5 and below) in the night sky.
-
-    :param lat: float between -90 and 90
-    :param lng: float between 0 and 360 going east
-        In other words, -122.42 degs west would become 237.58 (360 - 122.42)
-    """
-    lst = local_sidereal_time(lng)
-
-    in_night_sky = []
+def fetch_stars():
     with open(VISIBLE_STAR_PATH) as f:
         reader = csv.DictReader(f)
-
         for row in reader:
             try:
                 ra = float(row['ra_deg'])
                 dec = float(row['dec_deg'])
             except ValueError:
                 continue
+            yield (row, ra, dec)
 
-            altitude, azimuth = get_horizontal_coords((ra, dec), (lst, lat))
-            if altitude > 0:
-                in_night_sky.append(row)
 
-    return in_night_sky
+def current_night_sky(location):
+    """ Find all visible stars in the sky above.
+
+    Given any location (lat, lng) and assuming we only want stars at the
+    current moment, this will find all visible stars (visual magnitude 6.5 and
+    below) in the night sky.
+
+    :param location: lat/lng tuple
+        - lat: float between -90 and 90
+        - lng: float between 0 and 360 going east. In other words, -122.42 degs
+               west would become 237.58 (or 360 - 122.42)
+    """
+    return stars_in_viewport(location, 0, 180, 0, 90)
+
+
+def stars_in_viewport(location, fov_azimuth, az_range, fov_altitude, alt_range):
+    """ Find all visible stars through a given viewport.
+
+    Given a location (lat, lng), field of view angles, and assuming we only
+    want stars at the current moment, this will find all visible stars (visual
+    magnitude 6.5 and below) that fit into that viewport.
+
+    :param location: lat/lng tuple
+        - lat: float between -90 and 90
+        - lng: float between 0 and 360 going east. In other words, -122.42 degs
+               west would become 237.58 (or 360 - 122.42)
+    :param fov_azimuth: the angle the observer is looking at along the azimuth,
+        a float between 0 and 360.
+    :param az_range: the fov angle visible to the observer, both to the left
+        and right of his azimuth angle. A float.
+    :param fov_altitude: the angle the observer is looking at along the
+        altitude, a float between 0 and 90.
+    :param alt_range: the fov angle visible to the observer, both above and
+        below his altitude angle. A float.
+    """
+
+    lat, lng = location
+    lst = local_sidereal_time(lng)
+    visible = []
+
+    for star, ra, dec in fetch_stars():
+        star_altitude, star_azimuth = get_horizontal_coords((ra, dec), (lst, lat))
+
+        if (abs(fov_altitude - star_altitude) < alt_range and
+            abs(fov_azimuth - star_azimuth) < az_range and
+            star_altitude > 0):
+            visible.append(star)
+
+    return visible
