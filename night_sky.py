@@ -37,11 +37,14 @@ def get_horizontal_coords(star_coords, observer_coords):
     ra, dec = [radians(c) for c in star_coords]
     lst, lat = [radians(c) for c in observer_coords]
 
-    ha = abs(lst - ra) % CIRCLE_RADS
+    ha = (lst - ra) % CIRCLE_RADS
     altitude = asin(sin(dec) * sin(lat) + cos(dec) * cos(lat) * cos(ha))
     azimuth = acos(
        (sin(dec) - sin(altitude) * sin(lat)) / (cos(altitude) * cos(lat))
     )
+    if sin(ha) > 0:
+        azimuth = CIRCLE_RADS - azimuth
+
     return degrees(altitude), degrees(azimuth)
 
 
