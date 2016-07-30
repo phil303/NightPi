@@ -1,5 +1,5 @@
 import csv
-from math import pi, radians, degrees, asin, acos, sin, cos
+from math import pi, radians, degrees, asin, acos, sin, cos, atan
 from datetime import datetime
 
 from parse_hipparcos import VISIBLE_STAR_PATH
@@ -30,6 +30,12 @@ def local_sidereal_time(local_lng_eastward):
     http://tycho.usno.navy.mil/sidereal.html
     """
     return (greenwich_sidereal_time() + local_lng_eastward) % 360
+
+
+def to_xyz(location):
+    dec = location[0]
+    ra = radians(local_sidereal_time(location[1]))
+    return (cos(ra) * cos(dec), sin(ra) * cos(dec), sin(ra))
 
 
 def get_horizontal_coords(star_coords, observer_coords):
@@ -100,17 +106,20 @@ def stars_in_viewport(location, fov_azimuth, az_range, fov_altitude, alt_range):
     lst = local_sidereal_time(lng)
     visible = []
 
+    def check_azimuth(fov_azimuth, star_azimuth):
+        return (fov_azimuth - star_azimuth) % 180 < az_range
+
     for star, ra, dec in fetch_stars():
         star_altitude, star_azimuth = get_horizontal_coords((ra, dec), (lst, lat))
 
         if abs(fov_altitude - star_altitude) < alt_range and star_altitude > 0:
-            # we need to handle both the general case and the "exceeding 90
+            # we need to check both the general case and the "exceeding 90
             # degrees altitude" case, where we need to check the azimuths on
             # the other side of the circle since those become valid
-            if (abs(fov_azimuth - star_azimuth) < az_range or
-                (fov_altitude + star_altitude > 90 and
-                 abs((fov_azimuth + 180) % 360 - star_azimuth) < az_range)
-               ):
+            does_exceed = fov_altitude + star_altitude > 90
+            opposite_fov_az = (fov_azimuth - 180) % 360
+            if (check_azimuth(fov_azimuth, star_azimuth) or
+                (does_exceed and check_azimuth(opposite_fov_az, star_azimuth))):
                 visible.append(star)
 
     return visible
@@ -121,3 +130,8 @@ def star_data(hip_id, location):
     for s, ra, dec in fetch_stars():
         if s['hip_id'] == hip_id:
             return (s, get_horizontal_coords((ra, dec), (lst, lat)))
+
+
+def horiz_to_equatorial(altitude, star_az, obs_lat):
+    ha = atan(sin(az) / (cos(az) * sin(obs_lat) + tan(altitude) * cos(obs_lat)))
+    # declination
