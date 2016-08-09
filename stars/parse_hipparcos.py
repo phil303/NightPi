@@ -1,9 +1,12 @@
+import os
 import csv
 from collections import OrderedDict
 
-HIPPARCOS_PATH = 'data/hipparcos.dat'
+file_dir = os.path.dirname(__file__)
+
+HIPPARCOS_PATH = os.path.join(file_dir, '../data/hipparcos.dat')
 HIPPARCOS_DELIM = '|'
-VISIBLE_STAR_PATH = 'data/hipparcos_visible.csv'
+VISIBLE_STAR_PATH = os.path.join(file_dir, '../data/hipparcos_visible.csv')
 
 # stellar magnitude threshold according to Bright Star Catalogue:
 # https://en.wikipedia.org/wiki/Bright_Star_Catalogue
