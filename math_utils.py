@@ -4,6 +4,9 @@ def scalar_product(v1, v2):
     # how much of these two vectors are going in the same direction?
     return sum(a * b for (a, b) in zip(v1, v2))
 
+def vector_distance(v1, v2):
+    return math.sqrt(sum(abs(a - b) for a, b in zip(v1, v2)))
+
 def vector_length(v):
     return math.sqrt(sum(i**2 for i in v))
 
